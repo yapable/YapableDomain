@@ -843,20 +843,20 @@
   // Build gallery
   const grid = document.getElementById('galleryGrid');
   works.forEach((w, i) => {
-    const el = document.createElement('div');
-    el.className = 'gallery-thumb reveal';
-    el.dataset.index = i;
-    el.innerHTML = `
-      <div class="thumb-inner" style="background:url('images/01-Kazoku-Danran.jpg') center/cover;">>
-        <span class="thumb-number">${kanjiNum[i % 12] || (i+1)}</span>
-        <span class="thumb-sfx">${w.sfx}</span>
-        <span class="thumb-title">${w.title}</span>
-        <span class="thumb-sub">${w.sub}</span>
-        <div class="thumb-seal">印</div>
-      </div>`;
-    el.addEventListener('click', () => openLightbox(i));
-    grid.appendChild(el);
-  });
+  const el = document.createElement('div');
+  el.className = 'gallery-thumb reveal';
+  el.dataset.index = i;
+  el.innerHTML = `
+    <div class="thumb-inner" style="background:url('${w.img}') center/cover no-repeat; background-color:var(--panel-bg);">
+      <span class="thumb-number">${kanjiNum[i % 12] || (i+1)}</span>
+      <span class="thumb-sfx">${w.sfx}</span>
+      <span class="thumb-title">${w.title}</span>
+      <span class="thumb-sub">${w.sub}</span>
+      <div class="thumb-seal">印</div>
+    </div>`;
+  el.addEventListener('click', () => openLightbox(i));
+  grid.appendChild(el);
+});
 
   // ===== LIGHTBOX =====
   const lightbox = document.getElementById('lightbox');
@@ -873,12 +873,31 @@
     document.body.style.overflow = '';
   }
   function updateLightbox() {
-    const w = works[currentIdx];
-    document.getElementById('lbTitle').textContent = w.title;
-    document.getElementById('lbSub').textContent = w.sub;
-    document.getElementById('lbSfx').textContent = w.sfx;
-    document.getElementById('lbCounter').textContent = `${String(currentIdx+1).padStart(2,'0')} / ${String(works.length).padStart(2,'0')}`;
-  }
+  const w = works[currentIdx];
+  document.getElementById('lbTitle').textContent = w.title;
+  document.getElementById('lbSub').textContent = w.sub;
+  document.getElementById('lbSfx').textContent = w.sfx;
+  document.getElementById('lbCounter').textContent =
+    `${String(currentIdx+1).padStart(2,'0')} / ${String(works.length).padStart(2,'0')}`;
+  
+  const art = document.getElementById('lbArt');
+  art.style.backgroundImage = `url('${w.img}')`;
+  art.style.backgroundSize = 'cover';
+  art.style.backgroundPosition = 'center';
+}
+```
+
+The key pattern is simple — each image filename in the `img` property matches the file you upload to the `images/` folder in your GitHub repo. So your folder would look like:
+```
+your-repo/
+├── index.html
+└── images/
+    ├── 01-joker-deadpool.jpg
+    ├── 02-umbrella-academy.jpg
+    ├── 03-dark-aqua.jpg
+    ├── 04-spartan-bunny.jpg
+    ├── ...
+    └── 44-apex-predator.jpg
 
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
   document.getElementById('lbPrev').addEventListener('click', () => { currentIdx = (currentIdx-1+works.length)%works.length; updateLightbox(); });
