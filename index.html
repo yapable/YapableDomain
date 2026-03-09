@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joshua Yapable — 漫画家</title>
+<!-- Preconnect to font CDN for faster loading -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Noto+Serif+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<!-- Preload first 8 thumbnail images (above the fold) -->
+<link rel="preload" as="image" href="images/thumbs/01-Kazoku-Danran.jpg">
+<link rel="preload" as="image" href="images/thumbs/02-CafeShigure.jpg">
+<link rel="preload" as="image" href="images/thumbs/03-CafeShigure.jpg">
+<link rel="preload" as="image" href="images/thumbs/04-Animecity.jpg">
+<link rel="preload" as="image" href="images/thumbs/05-Rockbell-Workshop.jpg">
+<link rel="preload" as="image" href="images/thumbs/06-Anthology-2.jpg">
+<link rel="preload" as="image" href="images/thumbs/07-Spinxho.jpg">
+<link rel="preload" as="image" href="images/thumbs/08-Confrontation.jpg">
+<style>
+  :root { --transition-theme: 0.5s cubic-bezier(0.22, 1, 0.36, 1); }
+
+  [data-theme="light"] {
+    --bg: #f5f0e8; --fg: #0d0d0d; --vermillion: #c73e1d; --stone: #7a756c;
+    --panel-bg: #eae5dd; --card-bg: rgba(13,13,13,0.025); --border: rgba(13,13,13,0.08);
+    --nav-bg: rgba(245,240,232,0.88); --lightbox-bg: rgba(245,240,232,0.96);
+  }
+  [data-theme="dark"] {
+    --bg: #0d0d0d; --fg: #f5f0e8; --vermillion: #c73e1d; --stone: #8a8578;
+    --panel-bg: #1a1a1a; --card-bg: rgba(245,240,232,0.02); --border: rgba(245,240,232,0.07);
+    --nav-bg: rgba(13,13,13,0.88); --lightbox-bg: rgba(13,13,13,0.96);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--vermillion); color:var(--bg); }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background:var(--bg); color:var(--fg);
+    font-family:'Space Mono',monospace; overflow-x:hidden; line-height:1.7;
+    transition: background var(--transition-theme), color var(--transition-theme);
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='3' fill='none' stroke='%23c73e1d' stroke-width='1.5'/%3E%3Cline x1='12' y1='2' x2='12' y2='8' stroke='%23c73e1d' stroke-width='0.5' opacity='0.4'/%3E%3Cline x1='12' y1='16' x2='12' y2='22' stroke='%23c73e1d' stroke-width='0.5' opacity='0.4'/%3E%3Cline x1='2' y1='12' x2='8' y2='12' stroke='%23c73e1d' stroke-width='0.5' opacity='0.4'/%3E%3Cline x1='16' y1='12' x2='22' y2='12' stroke='%23c73e1d' stroke-width='0.5' opacity='0.4'/%3E%3C/svg%3E") 12 12, crosshair;
+  }
+
+  a { color:var(--fg); text-decoration:none; transition:color var(--transition-theme); }
+
+  body::before {
+    content:''; position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:10000;
+  }
+
+  .seigaiha-bg { position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.03; transition:opacity var(--transition-theme); }
+
+  .ink-cursor {
+    position:fixed; width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle,rgba(199,62,29,0.05) 0%,transparent 70%);
+    pointer-events:none; z-index:0; transform:translate(-50%,-50%);
+    transition:width 0.4s,height 0.4s;
+  }
+
+  .jp-rail { position:fixed; writing-mode:vertical-rl; font-family:'Noto Serif JP',serif; letter-spacing:12px; pointer-events:none; z-index:1; transition:color var(--transition-theme); }
+  .jp-rail-left { left:20px; top:50%; transform:translateY(-50%); font-size:12px; color:color-mix(in srgb,var(--fg) 6%,transparent); }
+  .jp-rail-right { right:20px; top:50%; transform:translateY(-50%); font-size:11px; color:color-mix(in srgb,var(--vermillion) 10%,transparent); }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; width:100%; z-index:100;
+    padding:22px 48px; display:flex; justify-content:space-between; align-items:center;
+    background:var(--nav-bg); backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    transition:background var(--transition-theme),border-color var(--transition-theme);
+  }
+  .hanko {
+    width:34px; height:34px; border:2px solid var(--vermillion);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Serif JP',serif; font-size:13px; font-weight:900;
+    color:var(--vermillion); transform:rotate(-8deg); position:relative;
+  }
+  .hanko::after { content:''; position:absolute; inset:-1px; border:1px solid var(--vermillion); opacity:0.3; transform:rotate(3deg); }
+  .nav-right { display:flex; align-items:center; gap:32px; }
+  .nav-links { display:flex; gap:32px; list-style:none; }
+  .nav-links a { font-size:10px; letter-spacing:3px; text-transform:uppercase; position:relative; padding-bottom:4px; }
+  .nav-links a::after { content:''; position:absolute; bottom:0; left:0; width:0; height:1.5px; background:var(--vermillion); transition:width 0.5s cubic-bezier(0.22,1,0.36,1); }
+  .nav-links a:hover::after { width:100%; }
+
+  .theme-toggle {
+    width:36px; height:36px; border:1px solid var(--border); background:transparent; color:var(--fg);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:border-color 0.3s,color 0.3s; font-size:16px; line-height:1; position:relative;
+  }
+  .theme-toggle:hover { border-color:var(--vermillion); color:var(--vermillion); }
+  .theme-toggle .icon-sun,.theme-toggle .icon-moon { position:absolute; transition:opacity 0.3s,transform 0.3s; }
+  [data-theme="light"] .icon-sun { opacity:1; transform:rotate(0); }
+  [data-theme="light"] .icon-moon { opacity:0; transform:rotate(-90deg); }
+  [data-theme="dark"] .icon-sun { opacity:0; transform:rotate(90deg); }
+  [data-theme="dark"] .icon-moon { opacity:1; transform:rotate(0); }
+
+  .music-toggle {
+    width:36px; height:36px; border:1px solid var(--border); background:transparent; color:var(--fg);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:border-color 0.3s,color 0.3s; position:relative;
+  }
+  .music-toggle:hover { border-color:var(--vermillion); color:var(--vermillion); }
+  .music-toggle .bars { display:flex; align-items:flex-end; gap:2px; height:14px; }
+  .music-toggle .bar { width:2px; background:var(--fg); border-radius:1px; transition:background 0.3s; }
+  .music-toggle:hover .bar { background:var(--vermillion); }
+  .music-toggle .bar:nth-child(1){height:6px} .music-toggle .bar:nth-child(2){height:10px}
+  .music-toggle .bar:nth-child(3){height:4px} .music-toggle .bar:nth-child(4){height:12px}
+  .music-toggle .bar:nth-child(5){height:7px}
+  .music-toggle.playing .bar { animation:musicBars 0.8s ease-in-out infinite alternate; }
+  .music-toggle.playing .bar:nth-child(1){animation-delay:0s} .music-toggle.playing .bar:nth-child(2){animation-delay:0.15s}
+  .music-toggle.playing .bar:nth-child(3){animation-delay:0.3s} .music-toggle.playing .bar:nth-child(4){animation-delay:0.1s}
+  .music-toggle.playing .bar:nth-child(5){animation-delay:0.25s}
+  @keyframes musicBars { 0%{height:3px} 100%{height:14px} }
+
+  .music-info {
+    position:absolute; top:calc(100% + 8px); right:0;
+    background:var(--bg); border:1px solid var(--border);
+    padding:10px 14px; white-space:nowrap;
+    font-size:9px; letter-spacing:1px; color:var(--stone);
+    opacity:0; pointer-events:none; transform:translateY(-4px);
+    transition:opacity 0.3s,transform 0.3s;
+  }
+  .music-toggle:hover .music-info { opacity:1; transform:translateY(0); }
+
+  /* HERO */
+  .hero { position:relative; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:2; overflow:hidden; }
+  .enso {
+    position:absolute; width:clamp(280px,45vw,550px); height:clamp(280px,45vw,550px);
+    border-radius:50%; border:2px solid color-mix(in srgb,var(--fg) 4%,transparent);
+    animation:ensoSpin 60s linear infinite; transition:border-color var(--transition-theme);
+  }
+  .enso::before { content:''; position:absolute; inset:-20px; border-radius:50%; border:1px solid rgba(199,62,29,0.05); }
+  .enso::after { content:''; position:absolute; top:-4px; left:50%; width:36px; height:6px; background:var(--vermillion); border-radius:50%; opacity:0.4; filter:blur(2px); }
+  @keyframes ensoSpin { to{transform:rotate(360deg)} }
+
+  .hero-content { position:relative; z-index:2; text-align:center; animation:fadeUp 1.4s cubic-bezier(0.16,1,0.3,1) forwards; opacity:0; transform:translateY(50px); }
+  @keyframes fadeUp { to{opacity:1;transform:translateY(0)} }
+
+  .hero-jp { font-family:'Noto Serif JP',serif; font-size:clamp(13px,1.8vw,17px); color:var(--vermillion); letter-spacing:14px; margin-bottom:18px; opacity:0; animation:fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.2s forwards; }
+  .hero-name { font-family:'Bebas Neue',sans-serif; font-size:clamp(56px,11vw,160px); line-height:0.92; letter-spacing:-1px; }
+  .hero-name .first { display:block; -webkit-text-stroke:1.5px var(--fg); color:transparent; transition:all 0.5s; }
+  .hero-name .first:hover { -webkit-text-stroke-color:var(--vermillion); }
+  .hero-name .last { display:block; position:relative; }
+  .hero-name .last::after { content:''; position:absolute; bottom:4px; left:5%; width:90%; height:7px; background:var(--vermillion); opacity:0.5; transform:skewX(-12deg); z-index:-1; }
+  .hero-role { font-family:'Space Mono',monospace; margin-top:24px; font-size:10px; letter-spacing:7px; text-transform:uppercase; color:var(--stone); opacity:0; animation:fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.5s forwards; }
+  .hero-quote { font-family:'Space Mono',monospace; font-style:italic; margin-top:16px; font-size:clamp(12px,1.2vw,14px); color:var(--stone); max-width:400px; margin-left:auto; margin-right:auto; opacity:0; animation:fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.7s forwards; }
+
+  .corner { position:absolute; opacity:0.08; }
+  .corner svg { width:36px; height:36px; }
+  .corner-tl{top:90px;left:48px} .corner-tr{top:90px;right:48px;transform:scaleX(-1)}
+  .corner-bl{bottom:48px;left:48px;transform:scaleY(-1)} .corner-br{bottom:48px;right:48px;transform:scale(-1)}
+
+  .hero-scroll { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; animation:fadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 1s forwards,gentleFloat 3s ease-in-out infinite 2.5s; }
+  .hero-scroll span { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--stone); }
+  .scroll-brush { width:1px; height:40px; position:relative; overflow:hidden; }
+  .scroll-brush::before { content:''; position:absolute; top:0; left:0; width:100%; height:100%; background:linear-gradient(to bottom,var(--vermillion),transparent); animation:brushDrip 2s ease-in-out infinite; }
+  @keyframes brushDrip { 0%{transform:translateY(-100%)} 50%{transform:translateY(0)} 100%{transform:translateY(100%)} }
+  @keyframes gentleFloat { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
+
+  .wave-divider { position:relative; z-index:2; height:60px; display:flex; align-items:center; justify-content:center; }
+  .wave-divider svg { width:100%; height:30px; opacity:0.06; }
+  .wave-divider path { stroke:var(--fg); transition:stroke var(--transition-theme); }
+
+  /* INTRO */
+  .intro { position:relative; z-index:2; padding:80px 48px; max-width:1100px; margin:0 auto; }
+  .intro-grid { display:grid; grid-template-columns:auto 1fr; gap:48px; align-items:start; }
+  .intro-kanji { font-family:'Noto Serif JP',serif; font-size:clamp(70px,9vw,120px); font-weight:900; color:transparent; -webkit-text-stroke:1px rgba(199,62,29,0.12); line-height:1; writing-mode:vertical-rl; user-select:none; }
+  .intro-text { font-family:'Bebas Neue',sans-serif; font-size:clamp(24px,3.5vw,46px); line-height:1.2; letter-spacing:1px; margin-bottom:32px; }
+  .intro-text .em { color:var(--vermillion); }
+  .intro-text .muted { color:var(--stone); opacity:0.5; }
+  .intro-note { font-size:12px; color:var(--stone); line-height:2; max-width:500px; border-left:2px solid var(--vermillion); padding-left:20px; }
+  .intro-note strong { color:var(--fg); font-weight:700; transition:color var(--transition-theme); }
+
+  .asanoha-band { position:relative; z-index:2; height:50px; overflow:hidden; opacity:0.04; }
+
+  /* WORKS */
+  .works { position:relative; z-index:2; padding:80px 48px 100px; max-width:1400px; margin:0 auto; }
+  .works-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:48px; padding-bottom:24px; border-bottom:1px solid var(--border); }
+  .works-header .label { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--vermillion); margin-bottom:6px; }
+  .works-header h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,5vw,64px); line-height:1; letter-spacing:2px; }
+  .works-header-right { font-family:'Noto Serif JP',serif; font-size:56px; font-weight:900; color:color-mix(in srgb,var(--fg) 5%,transparent); line-height:1; }
+
+  .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:4px; }
+
+  /* Lazy loading blur-up effect */
+  .gallery-thumb img.thumb-img {
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    z-index:0; transition: opacity 0.5s ease, filter 0.5s ease;
+  }
+  .gallery-thumb img.thumb-img.loading {
+    filter: blur(10px); opacity:0.6; transform:scale(1.05);
+  }
+  .gallery-thumb img.thumb-img.loaded {
+    filter: blur(0); opacity:1; transform:scale(1);
+  }
+
+  .gallery-thumb {
+    aspect-ratio:1; position:relative; overflow:hidden;
+    background:var(--panel-bg); border:1px solid var(--border); cursor:pointer;
+    transition:border-color 0.4s,transform 0.35s,background var(--transition-theme),border-color var(--transition-theme);
+  }
+  .gallery-thumb:hover { border-color:var(--vermillion); transform:scale(1.02); z-index:5; }
+
+  .thumb-inner {
+    width:100%; height:100%; display:flex; flex-direction:column; justify-content:flex-end;
+    align-items:center; position:relative; overflow:hidden; padding-bottom:20px;
+  }
+
+  /* Dark overlay gradient so text is readable over images */
+  .thumb-inner::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 40%, transparent 100%);
+    z-index:1; opacity:0; transition:opacity 0.4s;
+  }
+  .gallery-thumb:hover .thumb-inner::before { opacity:1; }
+
+  .thumb-number { position:absolute; top:10px; left:12px; font-family:'Noto Serif JP',serif; font-size:10px; font-weight:700; color:var(--vermillion); opacity:0; z-index:3; transition:opacity 0.4s; }
+  .gallery-thumb:hover .thumb-number { opacity:1; }
+
+  .thumb-sfx {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-8deg);
+    font-family:'Noto Serif JP',serif; font-size:56px; font-weight:900;
+    color:transparent; -webkit-text-stroke:1px rgba(255,255,255,0.06);
+    pointer-events:none; z-index:2; white-space:nowrap; transition:-webkit-text-stroke-color 0.4s;
+  }
+  .gallery-thumb:hover .thumb-sfx { -webkit-text-stroke-color:rgba(199,62,29,0.2); }
+
+  .thumb-title {
+    font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+    text-align:center; z-index:3; position:relative; padding:0 16px;
+    color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.5);
+    opacity:0; transform:translateY(8px);
+    transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .gallery-thumb:hover .thumb-title { opacity:1; transform:translateY(0); }
+
+  .thumb-sub {
+    font-size:9px; letter-spacing:2px; text-transform:uppercase;
+    color:rgba(255,255,255,0.7); z-index:3; position:relative; margin-top:4px;
+    text-shadow:0 1px 3px rgba(0,0,0,0.5);
+    opacity:0; transform:translateY(6px);
+    transition:all 0.4s cubic-bezier(0.22,1,0.36,1) 0.05s;
+  }
+  .gallery-thumb:hover .thumb-sub { opacity:1; transform:translateY(0); }
+
+  .thumb-seal {
+    position:absolute; bottom:10px; right:10px; width:22px; height:22px;
+    border:1.5px solid var(--vermillion); display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Serif JP',serif; font-size:8px; font-weight:900; color:var(--vermillion); z-index:3;
+    opacity:0; transform:rotate(-10deg) scale(0.7);
+    transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
+  }
+  .gallery-thumb:hover .thumb-seal { opacity:0.6; transform:rotate(-10deg) scale(1); }
+
+  /* LIGHTBOX */
+  .lightbox {
+    position:fixed; inset:0; z-index:99999;
+    background:var(--lightbox-bg); backdrop-filter:blur(24px);
+    display:none; justify-content:center; align-items:center;
+    opacity:0; transition:opacity 0.4s,background var(--transition-theme);
+  }
+  .lightbox.active { display:flex; opacity:1; }
+  .lightbox-content { display:flex; flex-direction:column; align-items:center; gap:20px; animation:lbIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+  @keyframes lbIn { 0%{opacity:0;transform:scale(0.92) translateY(20px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+
+  .lightbox-art {
+    width:min(75vw,600px); height:min(75vw,600px);
+    background-color:var(--panel-bg); background-size:contain; background-position:center; background-repeat:no-repeat;
+    border:1px solid var(--border);
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+    position:relative; overflow:hidden; padding-bottom:24px;
+    transition:background-color var(--transition-theme),border-color var(--transition-theme);
+  }
+  .lightbox-art .lb-overlay {
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 40%);
+    z-index:1;
+  }
+  .lightbox-art .lb-title {
+    font-family:'Bebas Neue',sans-serif; font-size:clamp(24px,3.5vw,38px); letter-spacing:3px;
+    z-index:2; text-align:center; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,0.5);
+  }
+  .lightbox-art .lb-sub {
+    font-size:11px; letter-spacing:3px; text-transform:uppercase;
+    color:rgba(255,255,255,0.7); margin-top:6px; z-index:2; text-shadow:0 1px 4px rgba(0,0,0,0.4);
+  }
+  .lightbox-info { font-size:10px; color:var(--stone); letter-spacing:3px; }
+  .lightbox-close {
+    position:absolute; top:28px; right:36px; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:4px;
+    color:var(--fg); cursor:pointer; padding:10px 18px; border:1px solid var(--border); background:none;
+    transition:all 0.3s;
+  }
+  .lightbox-close:hover { border-color:var(--vermillion); color:var(--vermillion); }
+  .lightbox-nav {
+    position:absolute; top:50%; transform:translateY(-50%); font-family:'Bebas Neue',sans-serif; font-size:28px;
+    color:var(--fg); cursor:pointer; padding:16px; background:none; border:none; transition:color 0.3s;
+  }
+  .lightbox-nav:hover { color:var(--vermillion); }
+  .lightbox-prev{left:20px} .lightbox-next{right:20px}
+
+  /* MARQUEE */
+  .marquee { position:relative; z-index:2; overflow:hidden; padding:28px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); transition:border-color var(--transition-theme); }
+  .marquee-track { display:flex; animation:mScroll 25s linear infinite; width:max-content; }
+  .marquee-text { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,5vw,60px); white-space:nowrap; padding:0 18px; color:transparent; -webkit-text-stroke:1px color-mix(in srgb,var(--fg) 8%,transparent); transition:all 0.3s; }
+  .marquee-text:hover { color:var(--vermillion); -webkit-text-stroke-color:var(--vermillion); }
+  .marquee-sep { font-family:'Noto Serif JP',serif; font-size:clamp(32px,5vw,60px); color:var(--vermillion); opacity:0.25; padding:0 10px; }
+  @keyframes mScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  /* ABOUT */
+  .about { position:relative; z-index:2; padding:100px 48px; max-width:1200px; margin:0 auto; }
+  .about-layout { display:grid; grid-template-columns:1fr 1fr; gap:72px; }
+  .about-left { display:flex; flex-direction:column; justify-content:center; }
+  .about-label { font-size:9px; letter-spacing:5px; text-transform:uppercase; color:var(--vermillion); margin-bottom:18px; }
+  .about-heading { font-family:'Bebas Neue',sans-serif; font-size:clamp(32px,3.5vw,48px); line-height:1.1; margin-bottom:24px; letter-spacing:1px; }
+  .about-heading .accent { color:var(--vermillion); }
+  .about-body { font-size:12px; color:var(--stone); line-height:2.1; max-width:440px; }
+  .about-body em { color:var(--fg); font-style:normal; font-weight:700; transition:color var(--transition-theme); }
+  .about-right { display:flex; flex-direction:column; gap:14px; }
+  .info-card {
+    background:var(--card-bg); border:1px solid var(--border);
+    padding:22px 26px; display:flex; justify-content:space-between; align-items:center;
+    transition:all 0.5s cubic-bezier(0.22,1,0.36,1),background var(--transition-theme),border-color var(--transition-theme);
+    position:relative; overflow:hidden;
+  }
+  .info-card::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background:var(--vermillion); transform:scaleY(0); transform-origin:top; transition:transform 0.5s cubic-bezier(0.22,1,0.36,1); }
+  .info-card:hover::before { transform:scaleY(1); }
+  .info-card:hover { transform:translateX(8px); border-color:rgba(199,62,29,0.2); }
+  .info-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--stone); }
+  .info-value { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; transition:color 0.4s; }
+  .info-card:hover .info-value { color:var(--vermillion); }
+
+  /* CONTACT */
+  .contact { position:relative; z-index:2; padding:100px 48px 72px; text-align:center; }
+  .contact-heading { font-family:'Bebas Neue',sans-serif; font-size:clamp(44px,8vw,110px); line-height:1.05; letter-spacing:2px; margin-bottom:24px; }
+  .contact-heading .outline { -webkit-text-stroke:1.5px var(--fg); color:transparent; transition:-webkit-text-stroke-color var(--transition-theme); }
+  .contact-sub { font-size:12px; color:var(--stone); max-width:440px; margin:0 auto 44px; line-height:2; }
+  .contact-buttons { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; }
+  .contact-btn {
+    font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--stone);
+    padding:16px 32px; border:1px solid var(--border);
+    transition:all 0.5s cubic-bezier(0.22,1,0.36,1); position:relative; overflow:hidden;
+  }
+  .contact-btn::before { content:''; position:absolute; inset:0; background:var(--vermillion); transform:scaleX(0); transform-origin:left; transition:transform 0.5s cubic-bezier(0.22,1,0.36,1); }
+  .contact-btn:hover { color:var(--bg); border-color:var(--vermillion); }
+  .contact-btn:hover::before { transform:scaleX(1); }
+  .contact-btn span { position:relative; z-index:1; }
+
+  /* FOOTER */
+  footer { position:relative; z-index:2; padding:32px 48px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); }
+  .footer-left { display:flex; align-items:center; gap:14px; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--stone); }
+  .footer-hanko { width:22px; height:22px; border:1.5px solid var(--vermillion); display:flex; align-items:center; justify-content:center; font-family:'Noto Serif JP',serif; font-size:8px; font-weight:900; color:var(--vermillion); transform:rotate(-6deg); }
+  .footer-links { display:flex; gap:24px; }
+  .footer-links a { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--stone); transition:color 0.3s; }
+  .footer-links a:hover { color:var(--vermillion); }
+
+  .reveal { opacity:0; transform:translateY(32px); transition:opacity 1s cubic-bezier(0.16,1,0.3,1),transform 1s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.vis { opacity:1; transform:translateY(0); }
+
+  .yt-player { position:fixed; width:0; height:0; overflow:hidden; pointer-events:none; z-index:-1; }
+
+  @media (max-width:900px) {
+    nav{padding:14px 20px} .nav-right{gap:16px} .nav-links{gap:16px} .nav-links a{font-size:9px;letter-spacing:2px}
+    .intro{padding:60px 20px} .intro-grid{grid-template-columns:1fr;gap:20px} .intro-kanji{writing-mode:horizontal-tb;font-size:56px}
+    .works{padding:60px 20px 80px} .works-header{flex-direction:column;align-items:flex-start;gap:6px}
+    .gallery-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:3px}
+    .about{padding:60px 20px} .about-layout{grid-template-columns:1fr;gap:36px}
+    .contact{padding:60px 20px 48px} .contact-buttons{flex-direction:column;align-items:center}
+    footer{padding:20px;flex-direction:column;gap:14px;text-align:center}
+    .jp-rail{display:none} .corner{display:none} .lightbox-nav{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="seigaiha-bg" id="seigaihaBg"></div>
+<div class="ink-cursor" id="inkCursor"></div>
+<div class="jp-rail jp-rail-left">墨 ・ 黒白 ・ 漫画 ・ 芸術 ・ 魂</div>
+<div class="jp-rail jp-rail-right">ジョシュア ・ ヤパブル</div>
+<div class="yt-player"><div id="ytPlayer"></div></div>
+
+<nav>
+  <a href="#" class="hanko">画</a>
+  <div class="nav-right">
+    <ul class="nav-links">
+      <li><a href="#works">Works</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="music-toggle" id="musicToggle" title="Toggle Music">
+      <div class="bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+      <div class="music-info">深い森 — Do As Infinity</div>
+    </button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle Theme">
+      <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="corner corner-tl"><svg viewBox="0 0 40 40"><path d="M0 40 L0 0 L40 0" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+  <div class="corner corner-tr"><svg viewBox="0 0 40 40"><path d="M0 40 L0 0 L40 0" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+  <div class="corner corner-bl"><svg viewBox="0 0 40 40"><path d="M0 40 L0 0 L40 0" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+  <div class="corner corner-br"><svg viewBox="0 0 40 40"><path d="M0 40 L0 0 L40 0" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+  <div class="enso"></div>
+  <div class="hero-content">
+    <p class="hero-jp">漫画家</p>
+    <h1 class="hero-name"><span class="first">Joshua</span><span class="last">Yapable</span></h1>
+    <p class="hero-role">Creative Director &bull; Manga Artist</p>
+    <p class="hero-quote">Black ink. White canvas. That's all I've ever needed.</p>
+  </div>
+  <div class="hero-scroll"><span>Scroll</span><div class="scroll-brush"></div></div>
+</section>
+
+<div class="wave-divider"><svg viewBox="0 0 1200 30" preserveAspectRatio="none"><path d="M0 15 Q50 0 100 15 Q150 30 200 15 Q250 0 300 15 Q350 30 400 15 Q450 0 500 15 Q550 30 600 15 Q650 0 700 15 Q750 30 800 15 Q850 0 900 15 Q950 30 1000 15 Q1050 0 1100 15 Q1150 30 1200 15" fill="none" stroke-width="0.6"/></svg></div>
+
+<section class="intro">
+  <div class="intro-grid reveal">
+    <div class="intro-kanji">墨絵</div>
+    <div>
+      <p class="intro-text">I draw in <span class="em">black and white</span> because the world already has enough colour. <span class="muted">What it needs is more contrast.</span></p>
+      <p class="intro-note"><strong>Manga350 Creative Director.</strong> Freelance illustrator. My work lives somewhere between shōnen impact panels and precise, deliberate linework. If you want ink that hits like the final page of a climactic chapter — let's talk!.</p>
+    </div>
+  </div>
+</section>
+
+<div class="asanoha-band" id="asanoha1"></div>
+
+<section class="works" id="works">
+  <div class="works-header reveal">
+    <div><p class="label">作品 — Selected Works</p><h2>The Work</h2></div>
+    <span class="works-header-right">四十四</span>
+  </div>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<section class="marquee">
+  <div class="marquee-track">
+    <span class="marquee-text">漫画</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Black & White</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">墨</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Character Design</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">少年</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Creative Direction</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">漫画</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Black & White</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">墨</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Character Design</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">少年</span><span class="marquee-sep">鳥居</span>
+    <span class="marquee-text">Creative Direction</span><span class="marquee-sep">鳥居</span>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="about-layout">
+    <div class="about-left reveal">
+      <p class="about-label">人物 — The Artist</p>
+      <h2 class="about-heading">Ink before<br>lunch. <span class="accent">Every day.</span></h2>
+      <p class="about-body">
+        <em>Joshua Yapable</em> — Creative Director at Manga350 and freelance manga artist. My work lives in the space between shōnen energy and delicate lines. Storytelling.
+        <br><br>Everyday starts with a sketch — a daily ritual before anything else. It's not warm-up. It's commitment. The rest of the day earns the right to follow.
+        <br><br>I don't do colour. I do <em>line weight</em>. I do <em>contrast</em>. I do pages that make you hear the impact.
+      </p>
+    </div>
+    <div class="about-right reveal">
+      <div class="info-card"><span class="info-label">Role</span><span class="info-value">Creative Director</span></div>
+      <div class="info-card"><span class="info-label">Studio</span><span class="info-value">Manga350</span></div>
+      <div class="info-card"><span class="info-label">Medium</span><span class="info-value">墨 — Digi Ink</span></div>
+      <div class="info-card"><span class="info-label">Style</span><span class="info-value">少年 — Shōnen</span></div>
+      <div class="info-card"><span class="info-label">Ritual</span><span class="info-value">朝の素描</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="asanoha-band" id="asanoha2"></div>
+
+<section class="contact" id="contact">
+  <div class="reveal">
+    <h2 class="contact-heading">Let's <span class="outline">Create</span><br>Something</h2>
+    <p class="contact-sub">Commissions, collaborations, or just geeking out over manga panelling — I'm here for it. Unless you want watercolours. I genuinely cannot do those.</p>
+    <div class="contact-buttons">
+      <a href="https://www.artstation.com/joshuayapable" target="_blank" class="contact-btn"><span>ArtStation</span></a>
+      <a href="/cdn-cgi/l/email-protection#bcd6d3cfd4c9ddc5ddccddded0d9fcdbd1ddd5d092dfd3d1" class="contact-btn"><span>Email</span></a>
+      <a href="https://x.com/Joshuayapable" class="contact-btn"><span>Twitter/X</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-left"><div class="footer-hanko">画</div><span>&copy; 2026 Joshua Yapable</span></div>
+  <div class="footer-links">
+    <a href="https://www.artstation.com/joshuayapable" target="_blank">ArtStation</a>
+    <a href="https://www.instagram.com/yapable">Instagram</a>
+    <a href="https://x.com/Joshuayapable">Twitter/X</a>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lbClose">CLOSE</button>
+  <button class="lightbox-nav lightbox-prev" id="lbPrev">&larr;</button>
+  <button class="lightbox-nav lightbox-next" id="lbNext">&rarr;</button>
+  <div class="lightbox-content">
+    <div class="lightbox-art" id="lbArt">
+      <div class="lb-overlay"></div>
+      <span class="lb-title" id="lbTitle"></span>
+      <span class="lb-sub" id="lbSub"></span>
+    </div>
+    <div class="lightbox-info"><span id="lbCounter"></span></div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ===== ALL 44 ARTWORKS — THUMB + FULL PATHS =====
+  // thumb: small 520px JPGs for grid (~30-60KB each)
+  // full:  high-res originals for lightbox
+  const works = [
+    { title:'Kazoku Danran',       sub:'The Sparky Baby',       sfx:'ドン',     thumb:'images/thumbs/01-Kazoku-Danran.jpg',       full:'images/full/01-Kazoku-Danran.jpg' },
+    { title:'Cafe Shigure I',        sub:'喫茶.時雨 ☕️ 🎵',       sfx:'バキ',     thumb:'images/thumbs/02-CafeShigure.jpg',         full:'images/full/02-CafeShigure.jpg' },
+    { title:'Cafe Shigure II',        sub:'喫茶.時雨 ☕️ 🎵',  sfx:'ザッ',     thumb:'images/thumbs/03-CafeShigure.jpg',         full:'images/full/03-CafeShigure.jpg' },
+    { title:'Anime City',          sub:' アニメ都市 🌃',       sfx:'ゴゴゴ',   thumb:'images/thumbs/04-Animecity.jpg',            full:'images/full/04-Animecity.jpg' },
+    { title:'Rockbell Workshop',   sub:'鋼の錬金術師',          sfx:'ドカ',     thumb:'images/thumbs/05-Rockbell-Workshop.jpg',   full:'images/full/05-Rockbell-Workshop.gif' },
+    { title:'Anthology EP2',         sub:'姊妹',       sfx:'シュッ',   thumb:'images/thumbs/06-Anthology-2.jpg',          full:'images/full/06-Anthology-2.jpg' },
+    { title:'Spinxho x Azuki',             sub:'ドゥカティ',   sfx:'ギン',     thumb:'images/thumbs/07-Spinxho.jpg',              full:'images/full/07-Spinxho.jpg' },
+    { title:'Confrontation',       sub:'対決',       sfx:'ブン',     thumb:'images/thumbs/08-Confrontation.jpg',        full:'images/full/08-Confrontation.jpg' },
+    { title:'Card Nekoman',        sub:'猫男',   sfx:'ザン',     thumb:'images/thumbs/09-Cardnekoman.jpg',          full:'images/full/09-Cardnekoman.jpg' },
+    { title:'BOBU Town',           sub:'ボブ市街',       sfx:'ドドド',   thumb:'images/thumbs/10-BOBUTown.jpg',             full:'images/full/10-BOBUTown.jpg' },
+    { title:'Ash Child',           sub:'灰子供 🚬',   sfx:'ゴォ',     thumb:'images/thumbs/11-Ashchild.jpg',             full:'images/full/11-Ashchild.jpg' },
+    { title:'Ayame',               sub:'あやめ 🌈',   sfx:'ガキン',   thumb:'images/thumbs/12-Ayame.jpg',                full:'images/full/12-Ayame.jpg' },
+    { title:'AlexHughSam Wedding', sub:'結婚式',     sfx:'バリ',     thumb:'images/thumbs/13-Alexhughsam-wedding.jpg',  full:'images/full/13-Alexhughsam-wedding.jpg' },
+    { title:'SANZA',               sub:'サンザの影',   sfx:'ゾク',     thumb:'images/thumbs/14-SANZA.jpg',                full:'images/full/14-SANZA.jpg' },
+    { title:'Memories & Promises', sub:'思い出 x 約束 🐰',       sfx:'スッ',     thumb:'images/thumbs/15-MemoriesPromises.jpg',     full:'images/full/15-MemoriesPromises.jpg' },
+    { title:'Coin',                sub:'硬貨 🪙',       sfx:'ドォン',   thumb:'images/thumbs/16-Coin.jpg',                 full:'images/full/16-Coin.jpg' },
+    { title:'JSONS',               sub:'日帰り旅行',       sfx:'フワ',     thumb:'images/thumbs/17-JSONS.jpg',                full:'images/full/17-JSONS.jpg' },
+    { title:'JSONS',               sub:'夜の外出',  sfx:'ゾゾゾ',   thumb:'images/thumbs/18-JSONS.jpg',                full:'images/full/18-JSONS.jpg' },
+    { title:"Dragon's Cliff",      sub:'龙崖 🐉⛰️',       sfx:'ザバ',     thumb:'images/thumbs/19-DragonCliff.jpg',          full:'images/full/19-DragonCliff.jpg' },
+    { title:'Nekokopi',            sub:'猫珈琲 ☕',          sfx:'ボォ',     thumb:'images/thumbs/20-Nekokopi.jpg',             full:'images/full/20-Nekokopi.jpg' },
+    { title:'Nekoma',              sub:'音駒 🐈‍⬛ ',   sfx:'ガチ',     thumb:'images/thumbs/21-Nekoma.jpg',               full:'images/full/21-Nekoma.jpg' },
+    { title:'ORIHIME',             sub:'おりひめ, 織姫',   sfx:'ダダダ',   thumb:'images/thumbs/22-ORIHIME.jpg',              full:'images/full/22-ORIHIME.jpg' },
+    { title:'Shadow Queen',        sub:'影の女王',   sfx:'ヒュウ',   thumb:'images/thumbs/23-ShadowQueen.jpg',          full:'images/full/23-ShadowQueen.jpg' },
+    { title:'Yuzu x Wonderland',                sub:'柚子 x ふしぎの国 ',   sfx:'ジュウ',   thumb:'images/thumbs/24-Yuzu.jpg',                 full:'images/full/24-Yuzu.jpg' },
+    { title:'REI',                 sub:'霊 🔔 ',   sfx:'メラ',     thumb:'images/thumbs/25-REI.jpg',                  full:'images/full/25-REI.jpg' },
+    { title:'Minh x Origin',                sub:'起源',   sfx:'バキバキ', thumb:'images/thumbs/26-Minh.jpg',                 full:'images/full/26-Minh.jpg' },
+    { title:'Minh x Nakama',              sub:'仲間',       sfx:'カタ',     thumb:'images/thumbs/27-Nakama.jpg',               full:'images/full/27-Nakama.jpg' },
+    { title:'Iced Coffee',         sub:'アイスコーヒー',       sfx:'ヒュン',   thumb:'images/thumbs/28-Icedcoffee.jpg',           full:'images/full/28-Icedcoffee.jpg' },
+    { title:'Arnold · Steamboy',   sub:'スチームボーイ',          sfx:'ゾワ',     thumb:'images/thumbs/29-Arnold-Steamboy.jpg',      full:'images/full/29-Arnold-Steamboy.jpg' },
+    { title:'Beantober 2024',      sub:'豆十月',       sfx:'ジャラ',   thumb:'images/thumbs/30-Beantober2024.jpg',        full:'images/full/30-Beantober2024.jpg' },
+    { title:'Shao',                sub:'シャオ',   sfx:'サァ',     thumb:'images/thumbs/31-Shao.jpg',                 full:'images/full/31-Shao.jpg' },
+    { title:'MANDOO',              sub:'ラーメン屋',   sfx:'キン',     thumb:'images/thumbs/32-MANDOO.jpg',               full:'images/full/32-MANDOO.jpg' },
+    { title:'Miss Ayase',          sub:'綾瀬 桃',   sfx:'ドクン',   thumb:'images/thumbs/33-MissAyase.jpg',            full:'images/full/33-MissAyase.jpg' },
+    { title:'KPOP Demon Hunters',  sub:'KPOPガールズ! デーモン・ハンターズ',   sfx:'ニヤ',     thumb:'images/thumbs/34-KPOP-DEMON-HUNTERS.jpg',   full:'images/full/34-KPOP-DEMON-HUNTERS.jpg' },
+    { title:'Kendo',               sub:'剣道,',       sfx:'ドドン',   thumb:'images/thumbs/35-Kendo.jpg',                full:'images/full/35-Kendo.jpg' },
+    { title:'Doodles',             sub:'落書き',  sfx:'ガルル',   thumb:'images/thumbs/36-Doodles.jpg',              full:'images/full/36-Doodles.jpg' },
+    { title:'Shinigami',           sub:'死神',   sfx:'ヌル',     thumb:'images/thumbs/37-Shinigami.jpg',            full:'images/full/37-Shinigami.jpg' },
+    { title:'Bean · Chowchow',    sub:'チャウ.チャウ',   sfx:'グオ',     thumb:'images/thumbs/38-Bean-Chowchow.jpg',        full:'images/full/38-Bean-Chowchow.jpg' },
+    { title:'Dr. Stone',           sub:'ドクターストーン',            sfx:'キラ',     thumb:'images/thumbs/39-DrStone.jpg',              full:'images/full/39-DrStone.jpg' },
+    { title:'Multichain Bandit',   sub:'鎖盗賊 🐸',   sfx:'ズドン',   thumb:'images/thumbs/40-Multichain-Bandit.jpg',    full:'images/full/40-Multichain-Bandit.jpg' },
+    { title:'Hillumia',            sub:'棚',   sfx:'シーン',   thumb:'images/thumbs/41-Hillumia.jpg',             full:'images/full/41-Hillumia.jpg' },
+    { title:'Samanco',             sub:'たい焼きアイス',   sfx:'ゴォォ',   thumb:'images/thumbs/42-Samanco.jpg',              full:'images/full/42-Samanco.jpg' },
+    { title:'The Great Escape',              sub:'逃げる',       sfx:'ヒュッ',   thumb:'images/thumbs/43-Escape.jpg',               full:'images/full/43-Escape.jpg' },
+    { title:'MO',                  sub:'も',   sfx:'ガオ',     thumb:'images/thumbs/44-MO.jpg',                   full:'images/full/44-MO.jpg' },
+  ];
+
+  const kanjiNum = ['壱','弐','参','四','伍','六','七','八','九','十','十一','十二'];
+
+  // ===== BUILD GALLERY WITH LAZY-LOADED IMAGES =====
+  const grid = document.getElementById('galleryGrid');
+  works.forEach((w, i) => {
+    const el = document.createElement('div');
+    el.className = 'gallery-thumb reveal';
+    el.dataset.index = i;
+    el.innerHTML = `
+      <div class="thumb-inner">
+        <img class="thumb-img loading" data-src="${w.thumb}" alt="${w.title}" width="520" height="520">
+        <span class="thumb-number">${kanjiNum[i % 12] || (i+1)}</span>
+        <span class="thumb-sfx">${w.sfx}</span>
+        <span class="thumb-title">${w.title}</span>
+        <span class="thumb-sub">${w.sub}</span>
+        <div class="thumb-seal">印</div>
+      </div>`;
+    el.addEventListener('click', () => openLightbox(i));
+    grid.appendChild(el);
+  });
+
+  // ===== LAZY LOAD OBSERVER — loads images only when near viewport =====
+  const lazyObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const src = img.dataset.src;
+        if (src) {
+          img.src = src;
+          img.onload = () => {
+            img.classList.remove('loading');
+            img.classList.add('loaded');
+          };
+          img.onerror = () => {
+            img.classList.remove('loading');
+          };
+          img.removeAttribute('data-src');
+        }
+        lazyObs.unobserve(img);
+      }
+    });
+  }, { rootMargin: '200px 0px' }); // Start loading 200px before visible
+
+  document.querySelectorAll('img.thumb-img[data-src]').forEach(img => lazyObs.observe(img));
+
+  // ===== LIGHTBOX WITH IMAGES =====
+  const lightbox = document.getElementById('lightbox');
+  let currentIdx = 0;
+
+  function openLightbox(idx) {
+    currentIdx = idx;
+    updateLightbox();
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function updateLightbox() {
+    const w = works[currentIdx];
+    document.getElementById('lbTitle').textContent = w.title;
+    document.getElementById('lbSub').textContent = w.sub;
+    document.getElementById('lbCounter').textContent = `${String(currentIdx+1).padStart(2,'0')} / ${String(works.length).padStart(2,'0')}`;
+    const art = document.getElementById('lbArt');
+    art.style.backgroundImage = `url('${w.full}')`;
+    // Preload adjacent images for smooth arrow navigation
+    const preloadNext = works[(currentIdx+1) % works.length].full;
+    const preloadPrev = works[(currentIdx-1+works.length) % works.length].full;
+    [preloadNext, preloadPrev].forEach(src => { const i = new Image(); i.src = src; });
+  }
+
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  document.getElementById('lbPrev').addEventListener('click', () => { currentIdx=(currentIdx-1+works.length)%works.length; updateLightbox(); });
+  document.getElementById('lbNext').addEventListener('click', () => { currentIdx=(currentIdx+1)%works.length; updateLightbox(); });
+  lightbox.addEventListener('click', e => { if(e.target===lightbox) closeLightbox(); });
+  document.addEventListener('keydown', e => {
+    if(!lightbox.classList.contains('active')) return;
+    if(e.key==='Escape') closeLightbox();
+    if(e.key==='ArrowLeft'){currentIdx=(currentIdx-1+works.length)%works.length;updateLightbox();}
+    if(e.key==='ArrowRight'){currentIdx=(currentIdx+1)%works.length;updateLightbox();}
+  });
+
+  // ===== THEME TOGGLE =====
+  const themeToggle = document.getElementById('themeToggle');
+  const html = document.documentElement;
+  function updateSeigaiha() {
+    const isDark = html.getAttribute('data-theme')==='dark';
+    const c = isDark?'%23f5f0e8':'%230d0d0d';
+    document.getElementById('seigaihaBg').style.backgroundImage =
+      `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50' viewBox='0 0 100 50'%3E%3Cpath d='M0 50 Q25 0 50 50 Q75 0 100 50' fill='none' stroke='${c}' stroke-width='0.5'/%3E%3Cpath d='M0 50 Q25 10 50 50 Q75 10 100 50' fill='none' stroke='${c}' stroke-width='0.3'/%3E%3Cpath d='M0 50 Q25 20 50 50 Q75 20 100 50' fill='none' stroke='${c}' stroke-width='0.2'/%3E%3C/svg%3E")`;
+    document.querySelectorAll('.asanoha-band').forEach(band=>{
+      band.style.backgroundImage =
+        `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='${c}' stroke-width='0.5'%3E%3Cpath d='M40 0L40 80'/%3E%3Cpath d='M0 40L80 40'/%3E%3Cpath d='M0 0L80 80'/%3E%3Cpath d='M80 0L0 80'/%3E%3Cpath d='M0 0L40 40L0 80'/%3E%3Cpath d='M80 0L40 40L80 80'/%3E%3Cpath d='M0 0L40 40L80 0'/%3E%3Cpath d='M0 80L40 40L80 80'/%3E%3C/g%3E%3C/svg%3E")`;
+      band.style.backgroundSize='80px 80px';
+    });
+  }
+  themeToggle.addEventListener('click', () => {
+    html.setAttribute('data-theme', html.getAttribute('data-theme')==='light'?'dark':'light');
+    updateSeigaiha();
+  });
+  updateSeigaiha();
+
+  // ===== MUSIC (deferred — loads after page is ready) =====
+  let player; let musicPlaying=false;
+  const musicBtn=document.getElementById('musicToggle');
+  window.addEventListener('load', () => {
+    const tag=document.createElement('script');
+    tag.src='https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  });
+  window.onYouTubeIframeAPIReady=function(){
+    player=new YT.Player('ytPlayer',{
+      height:'0',width:'0',videoId:'qIoDWTF0qSo',
+      playerVars:{autoplay:1,loop:1,playlist:'qIoDWTF0qSo'},
+      events:{onReady:function(e){e.target.setVolume(35);e.target.playVideo();musicPlaying=true;musicBtn.classList.add('playing');}}
+    });
+  };
+  musicBtn.addEventListener('click',()=>{
+    if(!player)return;
+    if(musicPlaying){player.pauseVideo();musicPlaying=false;musicBtn.classList.remove('playing');}
+    else{player.playVideo();musicPlaying=true;musicBtn.classList.add('playing');}
+  });
+
+  // ===== INK CURSOR =====
+  const cursor=document.getElementById('inkCursor');
+  let mx=0,my=0,cx=0,cy=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+  function animC(){cx+=(mx-cx)*0.07;cy+=(my-cy)*0.07;cursor.style.left=cx+'px';cursor.style.top=cy+'px';requestAnimationFrame(animC);}
+  animC();
+  document.querySelectorAll('.gallery-thumb,.contact-btn,.info-card').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cursor.style.width='240px';cursor.style.height='240px';});
+    el.addEventListener('mouseleave',()=>{cursor.style.width='160px';cursor.style.height='160px';});
+  });
+
+  // ===== SCROLL REVEAL =====
+  const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:0.08,rootMargin:'0px 0px -20px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+  // ===== HERO PARALLAX =====
+  const heroContent=document.querySelector('.hero-content');
+  const enso=document.querySelector('.enso');
+  window.addEventListener('scroll',()=>{const s=window.scrollY;if(s<window.innerHeight){heroContent.style.transform=`translateY(${s*0.25}px)`;heroContent.style.opacity=1-s/(window.innerHeight*0.7);enso.style.transform=`rotate(${s*0.05}deg) scale(${1+s*0.0003})`;}});
+
+  // ===== HERO GLITCH =====
+  const firstName=document.querySelector('.hero-name .first');
+  if(firstName){let g;firstName.addEventListener('mouseenter',()=>{let i=0;g=setInterval(()=>{firstName.style.transform=`translate(${(Math.random()-0.5)*5}px,${(Math.random()-0.5)*3}px)`;i++;if(i>8){clearInterval(g);firstName.style.transform='translate(0,0)';}},40);});}
+
+  // ===== SMOOTH NAV =====
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});});});
+
+  // ===== INK SPLASH =====
+  document.addEventListener('click',e=>{const s=document.createElement('div');s.style.cssText=`position:fixed;left:${e.clientX}px;top:${e.clientY}px;width:4px;height:4px;background:var(--vermillion);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);animation:inkSplash 0.6s ease-out forwards;`;document.body.appendChild(s);setTimeout(()=>s.remove(),700);});
+  const ss=document.createElement('style');ss.textContent=`@
